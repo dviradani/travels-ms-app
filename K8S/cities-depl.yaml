@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cities-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: citiesservice
+  template:
+    metadata:
+      labels:
+        app: citiesservice
+    spec:
+      containers:
+        - name: citiesservice
+          image: dviradani/citiesservice:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platforms-clusterip-srv
+spec:
+  type: ClusterIP
+  selector:
+    app: platformservice
+  ports:
+    - name: platformservice
+      protocol: TCP
+      port: 80
+      targetPort: 80
