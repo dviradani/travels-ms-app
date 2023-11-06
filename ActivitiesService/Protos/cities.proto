@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option csharp_namespace = "CitiesService";
+
+service GrpcCity {
+    rpc GetAllCities(GetAllRequest) returns (CitiesResponse);
+}
+
+message GetAllRequest {}
+
+message GrpcCityModel {
+    int32 cityId = 1;
+    string name = 2;
+    string country = 3;
+}
+
+message CitiesResponse {
+    repeated GrpcCityModel city = 1;
+}

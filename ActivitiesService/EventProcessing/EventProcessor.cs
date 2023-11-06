@@ -24,7 +24,7 @@ namespace ActivitiesService.EventProcessing
             switch (eventType)
             {
                 case EventType.CityPublished:
-                    //TO DO 
+                    AddCity(message);
                     break;
                 default:
                     break;
@@ -50,29 +50,28 @@ namespace ActivitiesService.EventProcessing
 
         private void AddCity(string cityPublishedMessage)
         {
-            using(var scope = _secopeFactory.CreateScope())
+            using var scope = _secopeFactory.CreateScope();
+            var repo = scope.ServiceProvider.GetRequiredService<IActivitiesRepo>();
+
+            var cityPublishedDto = JsonSerializer.Deserialize<CityPublishedDto>(cityPublishedMessage);
+
+            try
             {
-                var repo = scope.ServiceProvider.GetRequiredService<IActivitiesRepo>();
-
-                var cityPublishedDto = JsonSerializer.Deserialize<CityPublishedDto>(cityPublishedMessage);  
-
-                try
+                var city = _mapper.Map<City>(cityPublishedDto);
+                if (!repo.ExternalCityExists(city.ExternalID))
                 {
-                    var city = _mapper.Map<City>(cityPublishedDto);
-                    if(!repo.ExternalCityExists(city.ExternalID))
-                    {
-                        repo.CreateCity(city);
-                        repo.SaveChanges();
-                    }
-                    else
-                    {
-                        System.Console.WriteLine("--> city already exists...");
-                    }
+                    repo.CreateCity(city);
+                    repo.SaveChanges();
+                    System.Console.WriteLine("--> City added!");
                 }
-                catch (Exception ex)
+                else
                 {
-                    System.Console.WriteLine("--> Could not add city to DB: " + ex.Message);
+                    System.Console.WriteLine("--> city already exists...");
                 }
+            }
+            catch (Exception ex)
+            {
+                System.Console.WriteLine("--> Could not add city to DB: " + ex.Message);
             }
         }
     }

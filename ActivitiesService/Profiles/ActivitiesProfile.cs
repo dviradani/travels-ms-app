@@ -1,6 +1,7 @@
 using ActivitiesService.Dtos;
 using ActivitiesService.Models;
 using AutoMapper;
+using CitiesService;
 
 namespace ActivitiesService.Profiles
 {
@@ -13,8 +14,12 @@ namespace ActivitiesService.Profiles
             CreateMap<ActivityCreateDto, Activity>();
             CreateMap<Activity, ActivityReadDto>();
             CreateMap<CityPublishedDto, City>()
-            .ForMember(dest => dest.ExternalID, opt => opt.MapFrom(src => src.Id));
-            
+                .ForMember(dest => dest.ExternalID, opt => opt.MapFrom(src => src.Id));
+            CreateMap<GrpcCityModel, City>()
+                .ForMember(dest => dest.ExternalID, opt => opt.MapFrom(src => src.CityId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Activities, opt => opt.Ignore());
+                
         }
     }
 }

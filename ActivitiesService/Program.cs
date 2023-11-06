@@ -1,5 +1,7 @@
+using ActivitiesService.AsyncDataServices;
 using ActivitiesService.Data;
 using ActivitiesService.EventProcessing;
+using ActivitiesService.SyncDataServices.Grpc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,8 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
 builder.Services.AddScoped<IActivitiesRepo, ActivitiesRepo>();
 builder.Services.AddSingleton<IEventProcessor, EventProcessor>();
+builder.Services.AddHostedService<MessageBusSubscriber>();
+builder.Services.AddScoped<ICityDataClient, CityDataClient>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -23,10 +27,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
 app.MapControllers();
+
+PrepDb.PropPopulation(app);
 
 app.Run();
