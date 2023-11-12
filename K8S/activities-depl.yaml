@@ -1,31 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: commands-depl
+  name: activities-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: commandservice
+      app: activitiesservice
   template:
     metadata:
       labels:
-        app: commandservice
+        app: activitiesservice
     spec:
       containers:
-        - name: commandservice
-          image: dviradani/commandservice:latest
+        - name: activitiesservice
+          image: dviradani/activitiesservice:latest
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: commands-clusterip-srv
+  name: activities-clusterip-srv
 spec:
   type: ClusterIP
   selector:
-    app: commandservice
+    app: activitiesservice
   ports:
-    - name: commandservice
+    - name: activitiesservice
       protocol: TCP
       port: 80
       targetPort: 80

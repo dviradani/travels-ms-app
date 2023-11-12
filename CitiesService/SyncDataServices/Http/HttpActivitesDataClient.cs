@@ -7,10 +7,12 @@ namespace CitiesService.SyncDataServices.Http
     public class HttpActivitesDataClient : IActivitiesDataClient
     {
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public HttpActivitesDataClient(HttpClient httpClient)
+        public HttpActivitesDataClient(HttpClient httpClient , IConfiguration configuration)
         {
             _httpClient = httpClient;
+            _configuration = configuration;
         }
         public async Task SentCityToActivity(CityReadDto city)
         {
@@ -18,7 +20,7 @@ namespace CitiesService.SyncDataServices.Http
             Encoding.UTF8,
             "application/json");
 
-            var reponse = await _httpClient.PostAsync("http://localhost:6173/api/a/cities", httpContent);
+            var reponse = await _httpClient.PostAsync($"{_configuration["ActivitiesService"]}", httpContent);
             if(reponse.IsSuccessStatusCode)
             {
                 System.Console.WriteLine("--> sync POST to ActivitiesService was OK!");

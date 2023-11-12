@@ -1,7 +1,9 @@
 using AutoMapper;
+using CitiesService.AsyncDataServices;
 using CitiesService.Data;
 using CitiesService.Dtos;
 using CitiesService.Models;
+using CitiesService.SyncDataServices.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CitiesService.Controllers
@@ -12,11 +14,15 @@ namespace CitiesService.Controllers
     {
         private readonly ICityRepo _repository;
         private readonly IMapper _mapper;
+        private readonly IActivitiesDataClient _activitiesDataClient;
+        private readonly IMessageBusClient _messageBusClient;
 
-        public CitiesController(ICityRepo repository, IMapper mapper)
+        public CitiesController(ICityRepo repository, IMapper mapper , IActivitiesDataClient activitiesDataClient, IMessageBusClient messageBusClient)
         {
             _repository = repository;
             _mapper = mapper;
+            _activitiesDataClient = activitiesDataClient;
+            _messageBusClient = messageBusClient;
         }
 
         [HttpGet]
@@ -39,7 +45,7 @@ namespace CitiesService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<CityReadDto> CreateCity(CityCreateDto cityCreateDto)
+        public async Task<ActionResult<CityReadDto>> CreateCity(CityCreateDto cityCreateDto)
         {
             var cityModel = _mapper.Map<City>(cityCreateDto);
 
@@ -47,6 +53,28 @@ namespace CitiesService.Controllers
             _repository.SaveChanges();
 
             var cityReadDto = _mapper.Map<CityReadDto>(cityModel);
+
+            //Send Sync Message
+            try 
+            {
+                await _activitiesDataClient.SentCityToActivity(cityReadDto);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"--> Could not send synchronously: {ex.Message}");
+            }
+
+            // Send Async Message
+            try
+            {
+                var cityPublishedDto = _mapper.Map<CityPublishedDto>(cityReadDto);
+                cityPublishedDto.Event = "City_Published";
+                _messageBusClient.PublishNewCity(cityPublishedDto);
+            }
+            catch(Exception ex)
+            {
+                System.Console.WriteLine($"--> Could not send asynchronously: {ex.Message}");
+            }
 
             return CreatedAtRoute(nameof(GetCityById), new {id = cityReadDto.Id}, cityReadDto);
         }
